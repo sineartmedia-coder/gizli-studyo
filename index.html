@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1f2433">
+  <title>Taşpınar</title>
+  <style>
+    /* Oyunun başlık yazı tipi (Luckiest Guy, Apache 2.0): yükleme ekranı da başlık ekranıyla aynı görünsün */
+    @font-face { font-family: "Luckiest"; src: url("fontlar/LuckiestGuy-Regular.ttf") format("truetype"); font-display: swap; }
+    :root {
+      --zemin: #1f2433;
+      --yazi: #ffffff;
+      --soluk: rgba(255, 255, 255, .7);
+      --sari: #ffc740;
+      --sari-koyu: #c98f12;
+      --turuncu: #ee9a1f;
+      --postit: #ffe27a;
+      --postit-yazi: #3b2c06;
+    }
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: var(--zemin); overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+    #oyun { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; height: 100dvh; display: block; background: var(--zemin); touch-action: none; outline: none; }
+    .ekran { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--yazi); font-family: -apple-system, system-ui, "Segoe UI", sans-serif; background: var(--zemin); text-align: center; padding: 24px; box-sizing: border-box; }
+
+    /* ---------- Yükleme: dolan çay bardağı, ofis notları, "Dokun, mesai başlasın" ---------- */
+    #yukleme {
+      z-index: 2; transition: opacity .5s;
+      background: radial-gradient(circle at 32% 55%, rgba(238, 154, 31, .2), transparent 55%), var(--zemin);
+      padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    }
+    #yukleme.hazir { cursor: pointer; }
+    .yukleme-ic { display: flex; align-items: center; justify-content: center; gap: clamp(18px, 5vw, 48px); max-width: 760px; width: 100%; }
+    .bardak { height: min(56vh, 220px); width: auto; flex: none; overflow: visible; filter: drop-shadow(0 12px 22px rgba(0, 0, 0, .35)); }
+    .cam { fill: none; stroke: rgba(255, 255, 255, .8); stroke-width: 2.5; stroke-linejoin: round; }
+    .parlama { fill: none; stroke: rgba(255, 255, 255, .35); stroke-width: 3; stroke-linecap: round; }
+    #cayDolgu { transform: translateY(134px); transition: transform .45s ease-out; }
+    .buhar path { fill: none; stroke: rgba(255, 255, 255, .65); stroke-width: 3.5; stroke-linecap: round; opacity: 0; }
+    .hazir .buhar path { animation: buhar 2.4s ease-in-out infinite; }
+    .hazir .buhar path:nth-child(2) { animation-delay: .7s; }
+    .hazir .buhar path:nth-child(3) { animation-delay: 1.4s; }
+    @keyframes buhar { 0% { opacity: 0; transform: translateY(6px); } 35% { opacity: .9; } 100% { opacity: 0; transform: translateY(-12px); } }
+
+    .kolon { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; text-align: left; min-width: 0; max-width: 340px; }
+    .logo { font-family: "Luckiest", -apple-system, system-ui, sans-serif; font-size: clamp(30px, 9vh, 46px); font-weight: 400; letter-spacing: .06em; line-height: 1; }
+    .alt-baslik { margin-top: -6px; color: var(--sari); font-size: 12px; font-weight: 800; letter-spacing: .34em; }
+    .not { position: relative; margin-top: 8px; background: var(--postit); color: var(--postit-yazi); padding: 13px 15px 12px; border-radius: 3px; transform: rotate(-1.5deg); box-shadow: 0 7px 16px rgba(0, 0, 0, .32); font-size: 15px; line-height: 1.35; font-weight: 650; min-height: 2.7em; max-width: 300px; transition: opacity .3s; }
+    .not::before { content: ""; position: absolute; top: -9px; left: 50%; width: 58px; height: 18px; margin-left: -29px; background: rgba(255, 255, 255, .45); transform: rotate(2deg); }
+    .not.gizli { opacity: 0; }
+    #durum { font-size: 14px; font-weight: 700; color: var(--soluk); min-height: 1.2em; }
+    .dugme { -webkit-appearance: none; appearance: none; border: 0; margin-top: 2px; background: var(--sari); color: #2a1d00; font: inherit; font-size: 18px; font-weight: 900; padding: 0 26px; min-height: 54px; border-radius: 14px; box-shadow: 0 6px 0 var(--sari-koyu), 0 12px 24px rgba(0, 0, 0, .35); cursor: pointer; animation: nabiz 1.6s ease-in-out infinite; }
+    .dugme:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--sari-koyu), 0 6px 14px rgba(0, 0, 0, .35); animation: none; }
+    .dugme[hidden] { display: none; }
+    @keyframes nabiz { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
+
+    @media (max-width: 560px) {
+      .yukleme-ic { flex-direction: column; gap: 16px; }
+      .kolon { align-items: center; text-align: center; }
+      .bardak { height: min(32vh, 180px); }
+    }
+    @media (max-height: 380px) {
+      .kolon { gap: 9px; }
+      .not { font-size: 14px; padding: 10px 13px 9px; }
+      .dugme { min-height: 50px; font-size: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hazir .buhar path { animation: none; opacity: .7; }
+      .dugme { animation: none; }
+      #cayDolgu { transition: none; }
+    }
+
+    #yan { z-index: 3; display: none; }
+    #yan .ikon { font-size: 56px; animation: don 1.6s ease-in-out infinite; }
+    @keyframes don { 0%, 30% { transform: rotate(0); } 60%, 100% { transform: rotate(90deg); } }
+    @media (orientation: portrait) { body.mobil #yan { display: flex; } }
+    #hata { z-index: 4; display: none; background: #2d1f2f; }
+  </style>
+</head>
+<body>
+  <canvas id="oyun" tabindex="-1"></canvas>
+  <!-- Güvenli alan ölçer: çentik / Dynamic Island / ana ekran çizgisi paylarını CSS'ten okuyup oyuna bildiririz -->
+  <div id="guvenliOlcer" style="position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)"></div>
+  <div id="yukleme" class="ekran">
+    <div class="yukleme-ic">
+      <svg class="bardak" viewBox="0 0 140 200" aria-hidden="true">
+        <defs>
+          <linearGradient id="cay" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f08a2c"/>
+            <stop offset="1" stop-color="#9e2b0c"/>
+          </linearGradient>
+          <clipPath id="bardakIci"><path d="M36 36 C38 70 52 92 54 119 C56 140 44 156 46 174 L94 174 C96 156 84 140 86 119 C88 92 102 70 104 36 Z"/></clipPath>
+        </defs>
+        <g class="buhar">
+          <path d="M58 28 c-7 -7 7 -11 0 -19"/>
+          <path d="M70 26 c-7 -7 7 -11 0 -19"/>
+          <path d="M82 28 c-7 -7 7 -11 0 -19"/>
+        </g>
+        <ellipse cx="70" cy="184" rx="56" ry="6" fill="rgba(0,0,0,.25)"/>
+        <ellipse cx="70" cy="178" rx="60" ry="11" fill="#f6ecdc"/>
+        <ellipse cx="70" cy="176" rx="42" ry="6" fill="none" stroke="#e8731c" stroke-width="2"/>
+        <g clip-path="url(#bardakIci)">
+          <rect x="0" y="0" width="140" height="200" fill="rgba(255,255,255,.07)"/>
+          <rect id="cayDolgu" x="0" y="40" width="140" height="200" fill="url(#cay)"/>
+        </g>
+        <path class="cam" d="M36 36 C38 70 52 92 54 119 C56 140 44 156 46 174 L94 174 C96 156 84 140 86 119 C88 92 102 70 104 36 Z"/>
+        <path class="parlama" d="M45 48 C47 72 56 92 59 114"/>
+        <ellipse cx="70" cy="36" rx="34" ry="3.5" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2.5"/>
+      </svg>
+      <div class="kolon">
+        <div class="logo">TAŞPINAR</div>
+        <div class="alt-baslik">GİZLİ STÜDYO</div>
+        <div id="not" class="not"></div>
+        <div id="durum" aria-live="polite">Çay demleniyor…</div>
+        <button id="basla" class="dugme" type="button" hidden>Dokun, mesai başlasın</button>
+      </div>
+    </div>
+  </div>
+  <div id="yan" class="ekran"><div class="ikon">📱</div><b>Telefonu yan çevir</b><small>Oyun yatay ekranda oynanıyor</small></div>
+  <div id="hata" class="ekran"><b>Bir sorun oldu 😕</b><small id="hataYazi"></small></div>
+  <script>
+    var canvas = document.getElementById("oyun");
+    var mobil = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+    if (mobil) document.body.classList.add("mobil");
+    document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+
+    // Tarayıcılar sesi ancak bir dokunuştan sonra açar (iPhone'da özellikle). Oyunun ses bağlamlarını
+    // yakalayıp "Dokun, mesai başlasın" dokunuşunda uyandırıyoruz.
+    var sesBaglamlari = [];
+    (function () {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      var Sarili = class extends AC { constructor(a) { super(a); sesBaglamlari.push(this); } };
+      window.AudioContext = Sarili;
+      if (window.webkitAudioContext) window.webkitAudioContext = Sarili;
+    })();
+    function sesleriAc() {
+      sesBaglamlari.forEach(function (c) {
+        try {
+          if (c.state !== "running") c.resume();
+          var b = c.createBuffer(1, 1, 22050), s = c.createBufferSource();
+          s.buffer = b; s.connect(c.destination); s.start(0);
+        } catch (e) { console.warn(e); }
+      });
+    }
+
+    // Yükleme ekranı: en fazla üç kısa not, talimat değil ton
+    var yukleme = document.getElementById("yukleme");
+    var dolgu = document.getElementById("cayDolgu");
+    var durum = document.getElementById("durum");
+    var dugme = document.getElementById("basla");
+    var notEl = document.getElementById("not");
+    var notlar = [
+      "Patron yakalarsa kovulmazsın. En fazla çay nöbetine yazılırsın.",
+      "Selami Bey bugün hangi müziği açacak? Kimse bilmiyor. Selami Bey de.",
+      "Bilgisayarında iki sekme var: biri iş, biri hayal.",
+    ];
+    var notNo = Math.floor(Math.random() * notlar.length);
+    notEl.textContent = notlar[notNo];
+    var notZamanlayici = setInterval(function () {
+      notNo = (notNo + 1) % notlar.length;
+      notEl.classList.add("gizli");
+      setTimeout(function () { notEl.textContent = notlar[notNo]; notEl.classList.remove("gizli"); }, 300);
+    }, 4500);
+
+    var enYuksek = 0, hazir = false, basladi = false;
+    function ilerleme(p) {
+      p = Math.max(enYuksek, Math.min(1, p || 0));
+      enYuksek = p;
+      dolgu.style.transform = "translateY(" + (134 * (1 - p)).toFixed(1) + "px)";
+      if (!hazir) durum.textContent = "Çay demleniyor… %" + Math.round(p * 100);
+    }
+    function oyunuBaslat() {
+      guvenliAlanGonder();
+      try { if (window.oyun) window.oyun.SendMessage("OyunYonetici", "Basla"); } catch (e) { console.warn(e); }
+    }
+    function basla() {
+      if (!hazir || basladi) return;
+      basladi = true;
+      sesleriAc();
+      // Basla tekrar çağrılsa da zararsız; sahne o an hazır değilse diye birkaç kez gönderiyoruz
+      oyunuBaslat(); setTimeout(oyunuBaslat, 400); setTimeout(oyunuBaslat, 1500);
+      clearInterval(notZamanlayici);
+      yukleme.style.opacity = "0";
+      setTimeout(function () { yukleme.style.display = "none"; }, 500);
+      canvas.focus();
+    }
+    yukleme.addEventListener("click", basla);
+    document.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") basla(); });
+
+    var config = {
+      dataUrl: "Build/Web.data.unityweb",
+      frameworkUrl: "Build/Web.framework.js.unityweb",
+      codeUrl: "Build/Web.wasm.unityweb",
+      streamingAssetsUrl: "StreamingAssets",
+      companyName: "Taspinar",
+      productName: "Taspinar",
+      productVersion: "0.1.0",
+      // Telefonlarda çözünürlüğü biraz düşür: akıcılık için
+      devicePixelRatio: mobil ? Math.min(window.devicePixelRatio || 1, 1.75) : Math.min(window.devicePixelRatio || 1, 2),
+      showBanner: function (msg, type) {
+        if (type === "error") { document.getElementById("hataYazi").textContent = msg; document.getElementById("hata").style.display = "flex"; }
+        else console.warn(msg);
+      },
+    };
+
+    // Güvenli alan payları (ekranın oranı olarak "sol,sağ,üst,alt"); telefon döndürülünce yeniden gönderilir
+    function guvenliAlanGonder() {
+      if (!window.oyun) return;
+      try {
+        var s = getComputedStyle(document.getElementById("guvenliOlcer"));
+        var w = window.innerWidth || 1, h = window.innerHeight || 1;
+        var paylar = [parseFloat(s.paddingLeft) / w, parseFloat(s.paddingRight) / w, parseFloat(s.paddingTop) / h, parseFloat(s.paddingBottom) / h];
+        window.oyun.SendMessage("OyunYonetici", "GuvenliAlan", paylar.map(function (x) { return (x || 0).toFixed(4); }).join(","));
+      } catch (e) { console.warn(e); }
+    }
+    window.addEventListener("resize", function () { setTimeout(guvenliAlanGonder, 250); });
+    window.addEventListener("orientationchange", function () { setTimeout(guvenliAlanGonder, 400); });
+
+    var script = document.createElement("script");
+    script.src = "Build/Web.loader.js";
+    script.onload = function () {
+      createUnityInstance(canvas, config, ilerleme).then(function (oyun) {
+        window.oyun = oyun;
+        guvenliAlanGonder();
+        ilerleme(1);
+        hazir = true;
+        durum.textContent = "Çay hazır!";
+        yukleme.classList.add("hazir");
+        dugme.hidden = false;
+        dugme.focus({ preventScroll: true });
+      }).catch(function (m) {
+        document.getElementById("hataYazi").textContent = m;
+        document.getElementById("hata").style.display = "flex";
+      });
+    };
+    document.body.appendChild(script);
+  </script>
+</body>
+</html>
